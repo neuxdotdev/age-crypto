@@ -6,7 +6,7 @@ using the modern age file encryption format. The crate supports both X25519 key�
 and passphrase‑based encryption, and can produce either binary or PEM‑armored output.
 
 This crate is designed to be used in conjunction with
-[`age_kit`](https://crates.io/crates/age_kit), which handles secure key pair
+[`age‑setup`](https://crates.io/crates/age_setup), which handles secure key pair
 generation, validation, and zeroized memory for secret keys. All examples in this
 documentation use `age‑setup` for key management.
 
@@ -32,7 +32,7 @@ assert_eq!(decrypted, plaintext);
 
 ```rs
 use age_crypto::{encrypt, decrypt};
-use age_kit::build_keypair;
+use age_setup::build_keypair;
 
 # fn main() -> age_crypto::errors::Result<()> {
 // Generate a key pair
@@ -63,7 +63,7 @@ Key‑based encryption uses X25519 public keys (`age1...`). It is suitable for:
 
 ```rs
 use age_crypto::{encrypt, decrypt};
-use age_kit::build_keypair;
+use age_setup::build_keypair;
 
 # fn main() -> age_crypto::errors::Result<()> {
 let recipient = build_keypair().expect("key generation failed");
@@ -83,7 +83,7 @@ assert_eq!(decrypted, data);
 ```rs
 use age_crypto::encrypt;
 use age_crypto::decrypt;
-use age_kit::build_keypair;
+use age_setup::build_keypair;
 
 # fn main() -> age_crypto::errors::Result<()> {
 let alice = build_keypair().expect("key generation failed");
@@ -222,7 +222,7 @@ accidentally mixing plaintext and ciphertext.
 
 ```
 use age_crypto::{encrypt, EncryptedData};
-use age_kit::build_keypair;
+use age_setup::build_keypair;
 
 # fn main() -> age_crypto::errors::Result<()> {
 let keys = build_keypair().expect("key generation failed");
@@ -244,7 +244,7 @@ built‑in format validation.
 
 ```rs
 use age_crypto::{encrypt_armor, ArmoredData};
-use age_kit::build_keypair;
+use age_setup::build_keypair;
 
 # fn main() -> age_crypto::errors::Result<()> {
 let keys = build_keypair().expect("key generation failed");
@@ -329,7 +329,7 @@ The companion crate [`age‑setup`](https://crates.io/crates/age‑setup) provid
 
 ```rs
 use age_crypto::{encrypt, decrypt};
-use age_kit::build_keypair;
+use age_setup::build_keypair;
 
 # fn main() -> age_crypto::errors::Result<()> {
 // 1. Setup: generate a key pair for a new user
@@ -390,7 +390,7 @@ can decrypt it.
 
 ```rs
 // --- Server setup (once) ---
-use age_kit::build_keypair;
+use age_setup::build_keypair;
 use std::fs;
 
 fn setup_server_keys() -> Result<(), Box<dyn std::error::Error>> {
