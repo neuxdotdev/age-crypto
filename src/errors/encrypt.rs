@@ -239,7 +239,7 @@ pub enum EncryptError {
 }
 
 // ============================================================================
-// 🔧 HELPER METHODS (optional but useful for error inspection)
+// HELPER METHODS (optional but useful for error inspection)
 // ============================================================================
 impl EncryptError {
     /// Returns `true` if this error indicates a user-correctable issue
@@ -297,7 +297,7 @@ impl EncryptError {
 }
 
 // ============================================================================
-// 🧪 UNIT TESTS (comprehensive coverage for EncryptError)
+// UNIT TESTS (comprehensive coverage for EncryptError)
 // ============================================================================
 #[cfg(test)]
 mod tests {
