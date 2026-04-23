@@ -191,7 +191,7 @@ pub enum DecryptError {
 }
 
 // ============================================================================
-// 🧪 UNIT TESTS (for DecryptError itself)
+// UNIT TESTS (for DecryptError itself)
 // ============================================================================
 #[cfg(test)]
 mod tests {
