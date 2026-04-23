@@ -24,23 +24,22 @@ use std::io::Read;
 /// **No.** All errors are returned as `Err`.
 ///
 /// # Example
-/// ```rust
-/// use age::x25519::Identity;
+/// ```
 /// use age_crypto::decrypt;
-/// use age::secrecy::ExposeSecret;
+/// use age_setup::build_keypair;
 ///
 /// # fn main() -> age_crypto::errors::Result<()> {
 /// // Generate a fresh key pair
-/// let identity = Identity::generate();
-/// let pubkey = identity.to_public();
-/// let secret_key = identity.to_string();  // Returns SecretBox<str>
+/// let keypair = build_keypair().expect("key generation failed");
+/// let pubkey = keypair.public.expose();      // "age1..."
+/// let secret = keypair.secret.expose();      // "AGE-SECRET-KEY-1..."
 ///
 /// // Encrypt a test message
 /// let plaintext = b"Top secret data";
-/// let encrypted = age_crypto::encrypt(plaintext, &[&pubkey.to_string()])?;
+/// let encrypted = age_crypto::encrypt(plaintext, &[pubkey])?;
 ///
-/// // Decrypt: use .expose_secret() to get &str from SecretBox<str>
-/// let decrypted = decrypt(encrypted.as_bytes(), secret_key.expose_secret())?;
+/// // Decrypt using the secret key
+/// let decrypted = decrypt(encrypted.as_bytes(), secret)?;
 /// assert_eq!(decrypted, plaintext);
 /// # Ok(())
 /// # }
