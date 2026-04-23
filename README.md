@@ -6,7 +6,7 @@ using the modern age file encryption format. The crate supports both X25519 key�
 and passphrase‑based encryption, and can produce either binary or PEM‑armored output.
 
 This crate is designed to be used in conjunction with
-[`age‑setup`](https://crates.io/crates/age_setup), which handles secure key pair
+[`age_setup`](https://crates.io/crates/age_setup), which handles secure key pair
 generation, validation, and zeroized memory for secret keys. All examples in this
 documentation use `age‑setup` for key management.
 
