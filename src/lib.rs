@@ -1,1 +1,18 @@
-
+pub mod apis;
+pub mod errors;
+pub mod types;
+pub use apis::decrypt;
+pub use apis::decrypt_armor;
+pub use apis::decrypt_with_passphrase;
+pub use apis::decrypt_with_passphrase_armor;
+pub use apis::encrypt;
+pub use apis::encrypt_armor;
+pub use apis::encrypt_with_passphrase;
+pub use apis::encrypt_with_passphrase_armor;
+pub use errors::Error;
+pub use errors::Result;
+pub use errors::decrypt::DecryptError;
+pub use errors::encrypt::EncryptError;
+pub use types::ArmoredData;
+pub use types::EncryptedData;
+pub use types::Passphrase;
