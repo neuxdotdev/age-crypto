@@ -25,29 +25,24 @@ use std::io::Write;
 /// **No.** All failure paths are handled gracefully.
 ///
 /// # Example
-/// ```rust
-/// use age::x25519::Identity;
+/// ```
 /// use age_crypto::encrypt;
+/// use age_setup::build_keypair;
 ///
 /// # fn main() -> age_crypto::errors::Result<()> {
 /// // Create two identities
-/// let alice = Identity::generate();
-/// let bob = Identity::generate();
+/// let alice = build_keypair().expect("key generation failed");
+/// let bob   = build_keypair().expect("key generation failed");
 ///
-/// // Convert public keys to String, then get &str references
-/// let alice_pub = alice.to_public().to_string();
-/// let bob_pub = bob.to_public().to_string();
-/// let recipients = [alice_pub.as_str(), bob_pub.as_str()];  // [&str; 2]
+/// let recipients = [alice.public.expose(), bob.public.expose()];
 ///
-/// // Use &str (not byte string) to avoid ASCII-only limitation
-/// let data = "Multi-recipient secret";
-/// let encrypted = encrypt(data.as_bytes(), &recipients)?;
+/// let data = b"Multi-recipient secret";
+/// let encrypted = encrypt(data, &recipients)?;
 ///
 /// assert!(!encrypted.as_bytes().is_empty());
 /// # Ok(())
 /// # }
 /// ```
-///
 pub fn encrypt(plaintext: &[u8], recipients: &[&str]) -> Result<EncryptedData> {
     let recipient_list = parse_recipients(recipients)?;
     let encryptor =
