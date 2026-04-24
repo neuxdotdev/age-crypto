@@ -1,18 +1,86 @@
 [package]
-name = "age_crypto"
+name = "age-crypto"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.95.0"  
 description = "A safe, ergonomic Rust wrapper around the age encryption library with strong typing, comprehensive error handling, and passphrase support."
+authors = ["neuxdotdev <neuxdev1@gmail.com>"]  
+license = "MIT"
+repository = "https://github.com/neuxdotdev/age-crypto"
+homepage = "https://github.com/neuxdotdev/age-crypto"
+documentation = "https://docs.rs/age-crypto"
+readme = "README.md"
+keywords = ["crypto", "encryption", "age", "security", "wrapper"]
+categories = ["cryptography", "development-tools"]
+exclude = [
+    "/.github",
+    "/.vscode",
+    "/.idea",
+    "/target",
+    "/.git",
+    "*.rs.bak",
+    "Cargo.lock",       
+    "tests/fixtures/*.tmp",
+    "bench/**/*",       
+    "example/**/*"      
+]
+include = [
+    "/src/**/*",
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE*",
+]
+autobins = false
+autolib = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "wasm32-unknown-unknown"]
 
 [dependencies]
 age = { version = "0.11.3", features = ["armor"] }
-rand = "0.8"
 thiserror = "2.0.18"
 zeroize = "1.8.2"
+rand = "0.8"
 
 [dev-dependencies]
-serde_json = "1.0.149"
-age-setup = "0.1.0"
-chrono = "0.4.44"
-serde = { version = "1.0.228", features = ["derive"] }
 criterion = { version = "0.8.2", features = ["html_reports"] }
+serde_json = "1.0.149"
+serde = { version = "1.0.228", features = ["derive"] }
+chrono = "0.4.44"
+age-setup = "0.1.0"
+
+[[bench]]
+name = "enc"
+harness = false
+
+[[bench]]
+name = "dc"
+harness = false
+
+[[bench]]
+name = "armor"
+harness = false
+
+[[bench]]
+name = "passphrase"
+harness = false
+
+[[bench]]
+name = "recipient"
+harness = false
+
+[[bench]]
+name = "types"
+harness = false
+
+[[bench]]
+name = "error"
+harness = false
+
+[lints.rust]
+unsafe_code = "warn"
+missing_docs = "warn"
+unused = "warn"
+deprecated = "warn"
