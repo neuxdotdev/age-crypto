@@ -1,3 +1,5 @@
+//! Encryption‑specific error types.
+
 use std::io;
 use thiserror::Error;
 
