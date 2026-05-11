@@ -5,3 +5,7 @@
 /coverage
 *tmp
 *.age
+tmp.diff
+/tmp
+a
+a.md
