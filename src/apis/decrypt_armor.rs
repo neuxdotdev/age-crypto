@@ -1,3 +1,5 @@
+//! Key‑based decryption of armored (PEM‑like) age ciphertexts.
+
 use crate::apis::parse_identity::parse_identity;
 use crate::errors::Result;
 use crate::errors::decrypt::DecryptError;
