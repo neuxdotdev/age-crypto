@@ -1,3 +1,5 @@
+//! Passphrase‑based encryption to binary age ciphertexts.
+
 use crate::errors::Result;
 use crate::errors::encrypt::EncryptError;
 use crate::types::EncryptedData;
