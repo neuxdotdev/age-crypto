@@ -2,7 +2,7 @@
 name = "age-crypto"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.95.0"  
+rust-version = "1.95.0"
 description = "A safe, ergonomic Rust wrapper around the age encryption library with strong typing, comprehensive error handling, and passphrase support."
 authors = ["neuxdotdev <neuxdev1@gmail.com>"]  
 license = "MIT"
