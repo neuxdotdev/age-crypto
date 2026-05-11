@@ -1,3 +1,5 @@
+//! Passphrase‑based decryption of binary age ciphertexts. 
+
 use crate::errors::Result;
 use crate::errors::decrypt::DecryptError;
 use age::secrecy::SecretString;
