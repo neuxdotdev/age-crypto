@@ -72,9 +72,9 @@ dependencies = [
 
 [[package]]
 name = "age-setup"
-version = "0.1.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0c6edaaa9b042b8678d3a4427ad73486cbbeec295b21a3c355fd0104f5c734e"
+checksum = "1262980211ee06b2726b9efe6105731b7662387447a087f73d5fe1581f34ffe4"
 dependencies = [
  "age",
  "rand",

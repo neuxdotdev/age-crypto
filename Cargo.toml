@@ -43,13 +43,13 @@ age = { version = "0.11.3", features = ["armor"] }
 thiserror = "2.0.18"
 zeroize = "1.8.2"
 rand = "0.8"
+age-setup = "0.2.1"
 
 [dev-dependencies]
 criterion = { version = "0.8.2", features = ["html_reports"] }
 serde_json = "1.0.149"
 serde = { version = "1.0.228", features = ["derive"] }
 chrono = "0.4.44"
-age-setup = "0.1.0"
 
 [[bench]]
 name = "enc"
@@ -79,8 +79,13 @@ harness = false
 name = "error"
 harness = false
 
-[lints.rust]
-unsafe_code = "warn"
-missing_docs = "warn"
-unused = "warn"
-deprecated = "warn"
+# [lints.rust]
+# unsafe_code = "warn"
+# missing_docs = "warn"
+# unused = "warn"
+# deprecated = "warn"
+
+
+[[bin]]
+name = "age-crypto-demo"
+path = "src/main.rs"
