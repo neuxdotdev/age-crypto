@@ -1,3 +1,8 @@
+//! Key‑based decryption of binary age ciphertexts.
+//!
+//! This module provides the [`decrypt`] function for decrypting
+//! binary‑format age files using an X25519 secret key.
+
 use crate::apis::parse_identity::parse_identity;
 use crate::errors::Result;
 use crate::errors::decrypt::DecryptError;
