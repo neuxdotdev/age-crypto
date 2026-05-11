@@ -1,4 +1,5 @@
 use std::fmt;
+use zeroize::Zeroize;
 
 /// A passphrase for password‑based encryption and decryption.
 ///
@@ -129,14 +130,7 @@ impl Passphrase {
 ///   dedicated types.
 impl Drop for Passphrase {
     fn drop(&mut self) {
-        // Overwrite each byte with zero using volatile writes so the
-        // compiler cannot optimise away the clearing as a dead store.
-        for byte in &mut self.inner {
-            // SAFETY: writing a zero byte to a mutable reference is safe.
-            unsafe { std::ptr::write_volatile(byte, 0) };
-        }
-        // Full memory barrier to prevent reordering of the zeroing.
-        std::sync::atomic::fence(std::sync::atomic::Ordering::SeqCst);
+        self.inner.zeroize();
     }
 }
 
