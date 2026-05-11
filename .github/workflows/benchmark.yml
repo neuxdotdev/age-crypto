@@ -10,7 +10,6 @@ jobs:
   benchmark:
     name: Run Benchmarks
     runs-on: ubuntu-latest
-    # Hapus 'needs' karena tidak bisa depend pada workflow lain
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
