@@ -1,3 +1,5 @@
+//! Key‑based encryption to armored (PEM‑like) age ciphertexts.
+
 use crate::apis::parse_recipients::parse_recipients;
 use crate::errors::Result;
 use crate::errors::encrypt::EncryptError;
