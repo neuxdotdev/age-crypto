@@ -1,3 +1,10 @@
+//! Passphrase type with secure memory handling.
+//!
+//! This module provides the [`Passphrase`] type, which wraps a secret string
+//! (passphrase) and ensures it is zeroized from memory when dropped. It also
+//! redacts the passphrase in debug and display outputs to prevent accidental
+//! exposure.
+
 use std::fmt;
 use zeroize::Zeroize;
 

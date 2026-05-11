@@ -1,3 +1,9 @@
+//! Binary age ciphertext type.
+//!
+//! This module provides the [`EncryptedData`] type, a wrapper around `Vec<u8>`
+//! representing raw binary age encrypted data. This is the compact, non‑text
+//! output format of age encryption.
+
 use std::fmt;
 
 /// A newtype over [`Vec<u8>`] representing **binary** (non‑armored) age

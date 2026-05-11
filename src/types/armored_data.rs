@@ -1,3 +1,9 @@
+//! Armored age ciphertext type.
+//!
+//! This module provides the [`ArmoredData`] type, a wrapper around a `String`
+//! representing PEM‑armored age encrypted data. The type guarantees valid UTF‑8
+//! and correct armor markers.
+
 use std::fmt;
 use std::ops::Deref;
 
