@@ -1,11 +1,10 @@
 use age_crypto::{decrypt_with_passphrase, encrypt_with_passphrase};
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 fn bench_passphrase_roundtrip(c: &mut Criterion) {
     let mut group = c.benchmark_group("passphrase_roundtrip");
     let sizes = [16, 1024, 1024 * 1024];
     let passphrases = ["a", "super-secret-long-passphrase-12345!"];
-
     for &size in &sizes {
         let plaintext = vec![0x77; size];
         for pass in &passphrases {
@@ -27,6 +26,5 @@ fn bench_passphrase_roundtrip(c: &mut Criterion) {
     }
     group.finish();
 }
-
 criterion_group!(benches, bench_passphrase_roundtrip);
 criterion_main!(benches);

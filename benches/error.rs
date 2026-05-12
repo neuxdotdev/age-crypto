@@ -1,6 +1,6 @@
 use age_crypto::errors::{DecryptError, EncryptError, Error};
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
-
+use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 fn bench_error_creation(c: &mut Criterion) {
     c.bench_function("error_encrypt_failed", |b| {
         b.iter(|| EncryptError::Failed(black_box("test error".into())))
@@ -15,7 +15,6 @@ fn bench_error_creation(c: &mut Criterion) {
         })
     });
 }
-
 fn bench_error_matching(c: &mut Criterion) {
     let err_decrypt = Error::Decrypt(DecryptError::Failed("wrong key".into()));
     let err_encrypt = Error::Encrypt(EncryptError::NoRecipients);
@@ -34,6 +33,5 @@ fn bench_error_matching(c: &mut Criterion) {
         })
     });
 }
-
 criterion_group!(benches, bench_error_creation, bench_error_matching);
 criterion_main!(benches);

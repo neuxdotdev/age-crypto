@@ -1,6 +1,6 @@
 use age_crypto::types::{ArmoredData, EncryptedData, Passphrase};
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
-
+use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 fn bench_encrypted_data(c: &mut Criterion) {
     let data = vec![0x42; 10_000];
     let enc = EncryptedData::from(data.clone());
@@ -17,7 +17,6 @@ fn bench_encrypted_data(c: &mut Criterion) {
         })
     });
 }
-
 fn bench_armored_data(c: &mut Criterion) {
     let pem_str = "-----BEGIN AGE ENCRYPTED FILE-----\n... lots of base64 ...\n-----END AGE ENCRYPTED FILE-----".to_string();
     let armored = ArmoredData::from(pem_str.clone());
@@ -30,7 +29,6 @@ fn bench_armored_data(c: &mut Criterion) {
     });
     c.bench_function("armored_deref_len", |b| b.iter(|| armored.len()));
 }
-
 fn bench_passphrase(c: &mut Criterion) {
     let p = Passphrase::new("bench-passphrase-long-enough-123");
     c.bench_function("passphrase_new", |b| {
@@ -45,7 +43,6 @@ fn bench_passphrase(c: &mut Criterion) {
         })
     });
 }
-
 criterion_group!(
     benches,
     bench_encrypted_data,
