@@ -1,8 +1,7 @@
 [package]
 name = "age-crypto"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-rust-version = "1.95.0"
 description = "A safe, ergonomic Rust wrapper around the age encryption library with strong typing, comprehensive error handling, and passphrase support."
 authors = ["neuxdotdev <neuxdev1@gmail.com>"]  
 license = "MIT"
@@ -24,14 +23,9 @@ exclude = [
     "bench/**/*",       
     "example/**/*"      
 ]
-include = [
-    "/src/**/*",
-    "/Cargo.toml",
-    "/README.md",
-    "/LICENSE*",
-]
-autobins = false
-autolib = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [package.metadata.docs.rs]
 all-features = true
@@ -44,6 +38,10 @@ thiserror = "2.0.18"
 zeroize = "1.8.2"
 rand = "0.8"
 age-setup = "0.2.1"
+libc = "0.2.186"
+
+[build-dependencies]
+cbindgen = "0.29.2"
 
 [dev-dependencies]
 criterion = { version = "0.8.2", features = ["html_reports"] }
@@ -79,13 +77,8 @@ harness = false
 name = "error"
 harness = false
 
-# [lints.rust]
-# unsafe_code = "warn"
+[lints.rust]
+unsafe_code = "warn"
 # missing_docs = "warn"
-# unused = "warn"
-# deprecated = "warn"
-
-
-[[bin]]
-name = "age-crypto-demo"
-path = "src/main.rs"
+unused = "warn"
+deprecated = "warn"
