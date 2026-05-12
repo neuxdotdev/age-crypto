@@ -11,7 +11,6 @@ pub enum DecryptError {
     #[error("I/O error: {0}")]
     Io(#[from] io::Error),
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
