@@ -1,5 +1,6 @@
 pub mod apis;
 pub mod errors;
+pub mod ffi;
 pub mod types;
 pub use apis::decrypt;
 pub use apis::decrypt_armor;
