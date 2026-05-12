@@ -11,6 +11,7 @@ pub enum DecryptError {
     #[error("I/O error: {0}")]
     Io(#[from] io::Error),
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -50,7 +51,7 @@ mod tests {
     #[test]
     fn test_error_source_chain() {
         use std::error::Error as StdError;
-        let io_err = io::Error::new(ErrorKind::Other, "underlying");
+        let io_err = io::Error::other("underlying");
         let decrypt_err = DecryptError::Io(io_err);
         assert!(decrypt_err.source().is_some());
     }

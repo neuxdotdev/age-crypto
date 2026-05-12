@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn test_error_source_chain() {
         use std::error::Error as StdError;
-        let io_err = io::Error::new(ErrorKind::Other, "underlying cause");
+        let io_err = io::Error::other("underlying cause");
         let encrypt_err = EncryptError::Io(io_err);
         assert!(encrypt_err.source().is_some());
     }
