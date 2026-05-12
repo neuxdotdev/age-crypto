@@ -6,27 +6,27 @@ on:
   pull_request:
     branches: ["master"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-docs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain (stable)
-        uses: dtolnay/rust-toolchain@v1
+      - uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
 
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
-      - name: Build documentation
-        run: cargo doc --verbose --no-deps --document-private-items
+      - name: Build docs
+        run: cargo doc --all-features --no-deps --document-private-items --verbose
 
-      - name: Upload documentation artifact
-        uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v4
         with:
           name: rust-docs
           path: target/doc
