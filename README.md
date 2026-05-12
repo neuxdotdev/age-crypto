@@ -1,470 +1,279 @@
 # age-crypto
 
-A safe, ergonomic Rust wrapper around the [age](https://age-encryption.org) encryption
-library. It provides a high‑level, idiomatic API for encrypting and decrypting data
-using the modern age file encryption format. The crate supports both X25519 key‑based
-and passphrase‑based encryption, and can produce either binary or PEM‑armored output.
+[![Crates.io](https://img.shields.io/crates/v/age-crypto.svg)](https://crates.io/crates/age-crypto)
+[![Documentation](https://docs.rs/age-crypto/badge.svg)](https://docs.rs/age-crypto)
+[![License](https://img.shields.io/crates/l/age-crypto.svg)](https://crates.io/crates/age-crypto)
 
-This crate is designed to be used in conjunction with
-[`age_setup`](https://crates.io/crates/age_setup), which handles secure key pair
-generation, validation, and zeroized memory for secret keys. All examples in this
-documentation use `age‑setup` for key management.
+A safe, ergonomic, and pure Rust wrapper around the [age](https://age-encryption.org/v1) encryption library. `age-crypto` provides a high-level, idiomatic API for encrypting and decrypting data using modern cryptographic primitives. It supports both **X25519 public-key encryption** and **passphrase-based encryption (scrypt)**, with options for both binary and PEM-armored (ASCII) output formats.
+
+Designed for seamless integration with [`age-setup`](https://crates.io/crates/age-setup), this crate handles the heavy lifting of encryption while ensuring type safety and secure memory handling.
+
+## Features
+
+- **Multiple Encryption Modes**:
+    - **Public Key (X25519)**: Encrypt data for specific recipients using their public keys.
+    - **Passphrase (Scrypt)**: Encrypt data using a passphrase, suitable for backups and personal use.
+- **Output Formats**:
+    - **Binary**: Compact, efficient for storage and network transmission.
+    - **Armored (PEM)**: Text-safe format (Base64) suitable for email, JSON, or copy-pasting.
+- **Multiple Recipients**: Encrypt a single file for multiple recipients in one operation.
+- **Type Safety**: Strong types (`EncryptedData`, `ArmoredData`) prevent misuse of ciphertext.
+- **Secure Memory**: Automatic zeroization of sensitive data (passphrases) upon drop.
+- **C Binding Support**: Full Foreign Function Interface (FFI) for integration with C/C++ projects.
+
+## Installation
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+age-crypto = "0.2" # Check crates.io for the latest version
+```
+
+For key generation capabilities, we recommend using the companion crate:
+
+```toml
+[dependencies]
+age-setup = "0.1"
+```
+
+---
 
 ## Quick Start
 
-### Passphrase‑based encryption (simplest)
+### 1. Passphrase-Based Encryption
 
-```rs
+The simplest way to encrypt data. No key management required.
+
+```rust
 use age_crypto::{encrypt_with_passphrase, decrypt_with_passphrase};
 
-# fn main() -> age_crypto::errors::Result<()> {
-let plaintext = b"secret message";
-let passphrase = "strong‑passphrase‑here";
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let plaintext = b"My secret data";
+    let passphrase = "strong-password-123";
 
-let encrypted = encrypt_with_passphrase(plaintext, passphrase)?;
-let decrypted = decrypt_with_passphrase(encrypted.as_bytes(), passphrase)?;
-assert_eq!(decrypted, plaintext);
-# Ok(())
-# }
+    // Encrypt
+    let encrypted = encrypt_with_passphrase(plaintext, passphrase)?;
+
+    // Decrypt
+    let decrypted = decrypt_with_passphrase(encrypted.as_bytes(), passphrase)?;
+
+    assert_eq!(decrypted, plaintext);
+    Ok(())
+}
 ```
 
-### Key‑based encryption (using `age‑setup`)
+### 2. Public Key Encryption (with `age-setup`)
 
-```rs
+Ideal for secure communication between parties.
+
+```rust
 use age_crypto::{encrypt, decrypt};
 use age_setup::build_keypair;
 
-# fn main() -> age_crypto::errors::Result<()> {
-// Generate a key pair
-let keypair = build_keypair().expect("key generation failed");
-let public_key_str = keypair.public.expose();   // "age1..."
-let secret_key_str = keypair.secret.expose();   // "AGE‑SECRET‑KEY‑1..."
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Generate keys (usually done once per user)
+    let keypair = build_keypair()?;
+    let public_key = keypair.public.expose(); // "age1..."
 
-// Encrypt with the public key
-let plaintext = b"sensitive data";
-let encrypted = encrypt(plaintext, &[public_key_str])?;
+    // 2. Encrypt for the recipient using their public key
+    let plaintext = b"Confidential message";
+    let encrypted = encrypt(plaintext, &[public_key])?;
 
-// Decrypt with the secret key
-let decrypted = decrypt(encrypted.as_bytes(), secret_key_str)?;
-assert_eq!(decrypted, plaintext);
-# Ok(())
-# }
+    // 3. Decrypt using the secret key
+    let decrypted = decrypt(encrypted.as_bytes(), keypair.secret.expose())?;
+
+    assert_eq!(decrypted, plaintext);
+    Ok(())
+}
 ```
 
-## Key‑Based Encryption
-
-Key‑based encryption uses X25519 public keys (`age1...`). It is suitable for:
-
-- Secure communication between users.
-- Encrypting files for multiple recipients.
-- Systems with explicit key management.
-
-### Single recipient example
-
-```rs
-use age_crypto::{encrypt, decrypt};
-use age_setup::build_keypair;
-
-# fn main() -> age_crypto::errors::Result<()> {
-let recipient = build_keypair().expect("key generation failed");
-
-let data = b"production server configuration";
-let encrypted = encrypt(data, &[recipient.public.expose()])?;
-
-// Only the holder of the matching secret key can decrypt
-let decrypted = decrypt(encrypted.as_bytes(), recipient.secret.expose())?;
-assert_eq!(decrypted, data);
-# Ok(())
-# }
-```
-
-### Multiple recipients example
-
-```rs
-use age_crypto::encrypt;
-use age_crypto::decrypt;
-use age_setup::build_keypair;
-
-# fn main() -> age_crypto::errors::Result<()> {
-let alice = build_keypair().expect("key generation failed");
-let bob   = build_keypair().expect("key generation failed");
-let carol = build_keypair().expect("key generation failed");
-
-// Encrypt once; any of the three can decrypt with their own secret key
-let recipients = [
-    alice.public.expose(),
-    bob.public.expose(),
-    carol.public.expose(),
-];
-
-let secret_document = b"company secret";
-let encrypted = encrypt(secret_document, &recipients)?;
-
-// Alice decrypts
-let decrypted = decrypt(encrypted.as_bytes(), alice.secret.expose())?;
-assert_eq!(decrypted, secret_document);
-
-// Bob can also decrypt
-let decrypted = decrypt(encrypted.as_bytes(), bob.secret.expose())?;
-assert_eq!(decrypted, secret_document);
-# Ok(())
-# }
-```
-
-## Passphrase‑Based Encryption
-
-Passphrase‑based encryption relies on a user‑chosen secret string. It is useful for:
-
-- Encrypted backups that can be remembered by a human.
-- Personal files where key distribution is not practical.
-- Scenarios where a full key management system is overkill.
-
-### Basic example
-
-```rs
-use age_crypto::{encrypt_with_passphrase, decrypt_with_passphrase};
-
-# fn main() -> age_crypto::errors::Result<()> {
-let backup_data = b"database credentials: user=admin, pass=supersecret";
-let passphrase = "MyStrongPassphrase2024!";
-
-let encrypted = encrypt_with_passphrase(backup_data, passphrase)?;
-// Store `encrypted` on disk / in cloud ...
-
-// Later, decrypt with the same passphrase
-let decrypted = decrypt_with_passphrase(encrypted.as_bytes(), passphrase)?;
-assert_eq!(decrypted, backup_data);
-# Ok(())
-# }
-```
-
-### Passphrase strength warning
-
-Weak passphrases can be brute‑forced. Use a long, high‑entropy passphrase.
-
-```rs
-use rand::{thread_rng, Rng};
-
-# fn main() {
-let words = ["correct", "horse", "battery", "staple", "mountain", "river"];
-let mut rng = thread_rng();
-let passphrase: String = (0..6)
-    .map(|_| words[rng.gen_range(0..words.len())])
-    .collect::<Vec<_>>()
-    .join("-");
-// Example output: "battery‑river‑correct‑horse‑staple‑mountain"
-# let _ = passphrase;
-# }
-```
-
-## Armored Output
-
-Armor encoding wraps the encrypted data in a PEM‑like text envelope
-(`-----BEGIN AGE ENCRYPTED FILE-----` / `-----END AGE ENCRYPTED FILE-----`).
-It makes the ciphertext safe for text‑only channels such as email, JSON,
-or copy‑paste operations.
-
-### Passphrase‑based armored encryption
-
-```rs
-use age_crypto::{encrypt_with_passphrase_armor, decrypt_with_passphrase_armor};
-
-# fn main() -> age_crypto::errors::Result<()> {
-let config = b"api_key=sk_live_abc123xyz";
-let passphrase = "deploy‑secret‑2024";
-
-let armored = encrypt_with_passphrase_armor(config, passphrase)?;
-
-// The output is a valid age armored string
-assert!(armored.starts_with("-----BEGIN AGE ENCRYPTED FILE-----"));
-
-// It can be written to a text file
-std::fs::write("config.age", armored.as_str()).expect("failed to write file");
-
-// Decryption from the armored string
-let loaded = std::fs::read_to_string("config.age").expect("failed to read file");
-let decrypted = decrypt_with_passphrase_armor(&loaded, passphrase)?;
-assert_eq!(decrypted, config);
-# Ok(())
-# }
-```
-
-### Binary vs Armored Comparison
-
-| Aspect           | Binary (`encrypt`)            | Armored (`encrypt_armor`)                    |
-| ---------------- | ----------------------------- | -------------------------------------------- |
-| Size             | Smaller (~30% less)           | Slightly larger (base64 overhead)            |
-| Format           | `Vec<u8>` (raw bytes)         | `String` (ASCII text)                        |
-| Typical use case | Binary files, network streams | Configuration files, email, JSON, copy‑paste |
-| Transport safety | Requires binary‑safe handling | Safe for all text‑based systems              |
+---
 
 ## API Reference
 
-### Public functions
+The library provides 8 core functions divided by encryption mode and output format.
 
-| Function                          | Description                         | Return type             |
-| --------------------------------- | ----------------------------------- | ----------------------- |
-| [`encrypt`]                       | Binary key‑based encryption         | `Result<EncryptedData>` |
-| [`encrypt_armor`]                 | Armored key‑based encryption        | `Result<ArmoredData>`   |
-| [`encrypt_with_passphrase`]       | Binary passphrase‑based encryption  | `Result<EncryptedData>` |
-| [`encrypt_with_passphrase_armor`] | Armored passphrase‑based encryption | `Result<ArmoredData>`   |
-| [`decrypt`]                       | Binary key‑based decryption         | `Result<Vec<u8>>`       |
-| [`decrypt_armor`]                 | Armored key‑based decryption        | `Result<Vec<u8>>`       |
-| [`decrypt_with_passphrase`]       | Binary passphrase‑based decryption  | `Result<Vec<u8>>`       |
-| [`decrypt_with_passphrase_armor`] | Armored passphrase‑based decryption | `Result<Vec<u8>>`       |
+### Encryption Functions
 
-### Output types
+| Function                          | Mode       | Output Format      | Description                                               |
+| :-------------------------------- | :--------- | :----------------- | :-------------------------------------------------------- |
+| [`encrypt`]                       | Public Key | Binary (`Vec<u8>`) | Encrypts for one or more recipients. Most compact format. |
+| [`encrypt_armor`]                 | Public Key | Armored (`String`) | Encrypts for recipients, wrapped in PEM armor.            |
+| [`encrypt_with_passphrase`]       | Passphrase | Binary (`Vec<u8>`) | Encrypts using a passphrase via scrypt.                   |
+| [`encrypt_with_passphrase_armor`] | Passphrase | Armored (`String`) | Encrypts with passphrase, wrapped in PEM armor.           |
+
+### Decryption Functions
+
+| Function                          | Mode       | Input Format | Description                                          |
+| :-------------------------------- | :--------- | :----------- | :--------------------------------------------------- |
+| [`decrypt`]                       | Public Key | Binary       | Decrypts using a secret key (`AGE-SECRET-KEY-1...`). |
+| [`decrypt_armor`]                 | Public Key | Armored      | Decrypts armored data using a secret key.            |
+| [`decrypt_with_passphrase`]       | Passphrase | Binary       | Decrypts using the passphrase.                       |
+| [`decrypt_with_passphrase_armor`] | Passphrase | Armored      | Decrypts armored data using the passphrase.          |
+
+---
+
+## Usage Guide
+
+### Output Types
+
+The library uses wrapper types to ensure data integrity and prevent accidental misuse.
 
 #### `EncryptedData`
 
-A newtype over `Vec<u8>` representing binary age‑encrypted data. It prevents
-accidentally mixing plaintext and ciphertext.
+Represents raw binary encrypted data.
 
-```
-use age_crypto::{encrypt, EncryptedData};
-use age_setup::build_keypair;
-
-# fn main() -> age_crypto::errors::Result<()> {
-let keys = build_keypair().expect("key generation failed");
-let encrypted: EncryptedData = encrypt(b"test", &[keys.public.expose()])?;
-
-// Access as a byte slice
-let bytes: &[u8] = encrypted.as_bytes();
-// Convert to owned Vec<u8>
-let owned: Vec<u8> = encrypted.to_vec();
-# let _ = (bytes, owned);
-# Ok(())
-# }
+```rust
+let data = encrypt(b"test", &[recipient])?;
+let bytes: &[u8] = data.as_bytes();
+let vec: Vec<u8> = data.to_vec();
 ```
 
 #### `ArmoredData`
 
-A newtype over `String` representing an armored age ciphertext. It provides
-built‑in format validation.
+Represents ASCII-armored encrypted data. It implements `Display` to output the armored string.
 
-```rs
-use age_crypto::{encrypt_armor, ArmoredData};
+```rust
+let armored = encrypt_with_passphrase_armor(b"test", "pass")?;
+println!("{}", armored); // Prints the full PEM block
+assert!(armored.starts_with("-----BEGIN AGE ENCRYPTED FILE-----"));
+```
+
+### Multiple Recipients
+
+You can encrypt data for multiple recipients simultaneously. Any one of the corresponding secret keys can decrypt the file.
+
+```rust
 use age_setup::build_keypair;
 
-# fn main() -> age_crypto::errors::Result<()> {
-let keys = build_keypair().expect("key generation failed");
-let armored: ArmoredData = encrypt_armor(b"test", &[keys.public.expose()])?;
+let alice = build_keypair()?;
+let bob = build_keypair()?;
 
-let text: &str = armored.as_str();
-// Quick validation: is this a valid age armored string?
-assert!(ArmoredData::is_valid_armored(text));
-# Ok(())
-# }
+let recipients = [alice.public.expose(), bob.public.expose()];
+let encrypted = encrypt(b"Shared secret", &recipients)?;
+
+// Bob can decrypt it
+let dec = decrypt(encrypted.as_bytes(), bob.secret.expose())?;
+assert_eq!(dec, b"Shared secret");
 ```
 
-## Error Handling
+### Error Handling
 
-Every function returns `age_crypto::errors::Result<T>`, an alias for
-`std::result::Result<T, age_crypto::errors::Error>`. The top‑level `Error` enum
-categorises failures into two groups:
+Errors are categorized into `EncryptError` and `DecryptError` wrapped in a top-level `Error` enum.
 
-- `Error::Encrypt(`[`EncryptError`]`)` – encryption‑related failures.
-- `Error::Decrypt(`[`DecryptError`]`)` – decryption‑related failures.
+```rust
+use age_crypto::{decrypt, Error, errors::DecryptError};
 
-```rs
-use age_crypto::{decrypt, Error};
-use age_crypto::errors::DecryptError;
-
-# fn example(ciphertext: &[u8], key: &str) {
-match decrypt(ciphertext, key) {
-    Ok(plaintext) => println!("Decryption succeeded: {} bytes", plaintext.len()),
-    Err(Error::Decrypt(DecryptError::InvalidIdentity(msg))) =>
-        eprintln!("Malformed secret key: {}", msg),
-    Err(Error::Decrypt(DecryptError::Failed(msg))) =>
-        eprintln!("Wrong key or tampered data: {}", msg),
-    Err(Error::Decrypt(DecryptError::InvalidCiphertext(msg))) =>
-        eprintln!("Not a valid age file: {}", msg),
-    other => eprintln!("Unexpected error: {:?}", other),
+match decrypt(bytes, "invalid-key") {
+    Ok(_) => println!("Success"),
+    Err(Error::Decrypt(DecryptError::InvalidIdentity(msg))) => {
+        eprintln!("The secret key format was invalid: {}", msg);
+    }
+    Err(Error::Decrypt(DecryptError::Failed(msg))) => {
+        eprintln!("Decryption failed (wrong key or tampered data): {}", msg);
+    }
+    Err(e) => eprintln!("Other error: {}", e),
 }
-# }
 ```
 
-### Error structure
+---
 
-```text
-Error
-+-- Encrypt(EncryptError)
-|   +-- NoRecipients
-|   +-- InvalidRecipient { recipient, reason }
-|   +-- Failed(String)
-|   +-- Io(io::Error)
-+-- Decrypt(DecryptError)
-    +-- InvalidIdentity(String)
-    +-- InvalidCiphertext(String)
-    +-- Failed(String)
-    +-- Io(io::Error)
-```
+## C/C++ Integration (FFI)
 
-## Security Best Practices
+`age-crypto` provides a stable C API for use in other languages. The bindings are generated using `cbindgen`.
 
-- **Use `age‑setup` to generate key pairs** – it guarantees valid format and
-  securely zeroes secret key memory on drop.
-- **Never hard‑code or log secret keys or passphrases.** `SecretKey`'s
-  `Display` implementation redacts the content, but you should still avoid
-  printing it.
-- **Use strong passphrases.** For password‑based encryption, prefer long,
-  randomly generated passphrases (diceware style) or a password manager.
-- **Leverage memory zeroing.** Both `age‑setup::SecretKey` and
-  `age_crypto::Passphrase` are automatically zeroized on drop. For
-  plaintext buffers, consider using the `zeroize` crate explicitly.
-- **Do not reuse nonces.** The crate handles nonce generation automatically;
-  do not attempt to override it.
-- **For very large files**, consider using the lower‑level `age` streaming API
-  directly to avoid loading the entire plaintext into memory at once.
+### Building the Shared Library
 
-## Integration with `age‑setup`
+1. Ensure you have the `cdylib` crate type in your `Cargo.toml`.
+2. Build with cargo:
+    ```bash
+    cargo build --release
+    ```
+    The output will be located at `target/release/libage_crypto.so` (Linux), `.dylib` (macOS), or `.dll` (Windows).
 
-The companion crate [`age‑setup`](https://crates.io/crates/age‑setup) provides:
+### Header File (`age-crypto.h`)
 
-- Generation of X25519 key pairs (`build_keypair()`).
-- Zeroizing memory for secret keys.
-- Safe wrappers (`PublicKey`, `SecretKey`, `KeyPair`).
+The header file defines the available functions. You can generate it using `cbindgen` or find it in the `clib/` directory of the repository.
 
-### Complete workflow: generate, encrypt, decrypt
+### C API Reference
 
-```rs
-use age_crypto::{encrypt, decrypt};
-use age_setup::build_keypair;
+#### Memory Management
 
-# fn main() -> age_crypto::errors::Result<()> {
-// 1. Setup: generate a key pair for a new user
-let user_keys = build_keypair().expect("key generation failed");
-println!("Public key (share freely): {}", user_keys.public);
-// Store user_keys.secret securely – do not log it!
+- **`age_free_string(char *s)`**: Frees a string returned by the library.
+- **`age_free_bytes(uint8_t *data, size_t len)`**: Frees a byte array returned by the library.
 
-// 2. Encrypt: send sensitive data to this user
-let sensitive = b"Q4 2024 financial report";
-let encrypted = encrypt(sensitive, &[user_keys.public.expose()])?;
+#### Encryption
 
-// 3. Transport: send `encrypted` over the network or save to a file
+- **`age_encrypt(...)`**: Binary public key encryption.
+- **`age_encrypt_armor(...)`**: Armored public key encryption.
+- **`age_encrypt_with_passphrase(...)`**: Binary passphrase encryption.
+- **`age_encrypt_with_passphrase_armor(...)`**: Armored passphrase encryption.
 
-// 4. Decrypt: the user decrypts with their secret key
-let decrypted = decrypt(encrypted.as_bytes(), user_keys.secret.expose())?;
-assert_eq!(decrypted, sensitive);
-# Ok(())
-# }
-```
+#### Decryption
 
-## Real‑World Examples
+- **`age_decrypt(...)`**: Binary public key decryption.
+- **`age_decrypt_armor(...)`**: Armored public key decryption.
+- **`age_decrypt_with_passphrase(...)`**: Binary passphrase decryption.
+- **`age_decrypt_with_passphrase_armor(...)`**: Armored passphrase decryption.
 
-### Secure config loader
+### C Example
 
-Load an encrypted configuration file that only the application can read.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include "age-crypto.h"
 
-```rs
-use age_crypto::decrypt_with_passphrase_armor;
-use serde::Deserialize;
-use std::env;
-use std::error::Error;
+int main() {
+    const char *passphrase = "my-secret-pass";
+    const char *plaintext = "Hello from C!";
+    size_t pt_len = 14;
 
-# fn main() -> Result<(), Box<dyn Error>> {
-#[derive(Deserialize)]
-struct AppConfig {
-    database_url: String,
-    api_key: String,
-}
+    // --- Encrypt (Armored) ---
+    char *armored_out = NULL;
+    int res = age_encrypt_with_passphrase_armor(
+        (uint8_t*)plaintext, pt_len, passphrase, &armored_out
+    );
 
-fn load_config(armored_file: &str, pass_env_var: &str) -> Result<AppConfig, Box<dyn Error>> {
-    let armored = std::fs::read_to_string(armored_file)?;
-    let passphrase = env::var(pass_env_var)
-        .map_err(|_| format!("Set {} environment variable", pass_env_var))?;
+    if (res == 0 && armored_out) {
+        printf("Encrypted Armored Data:\n%s\n", armored_out);
 
-    let config_json = decrypt_with_passphrase_armor(&armored, &passphrase)
-        .map_err(|e| format!("Decryption failed: {}", e))?;
-    let config: AppConfig = serde_json::from_slice(&config_json)?;
-    Ok(config)
-}
-# Ok(())
-# }
-```
+        // --- Decrypt (Armored) ---
+        uint8_t *decrypted = NULL;
+        size_t dec_len = 0;
 
-### Client‑server secure message exchange
+        res = age_decrypt_with_passphrase_armor(armored_out, passphrase, &decrypted, &dec_len);
 
-A client encrypts a message with the server's public key; only the server
-can decrypt it.
-
-```rs
-// --- Server setup (once) ---
-use age_setup::build_keypair;
-use std::fs;
-
-fn setup_server_keys() -> Result<(), Box<dyn std::error::Error>> {
-    let keys = build_keypair().map_err(|e| format!("Key gen failed: {}", e))?;
-    fs::write("server.pub", keys.public.expose()).expect("failed to write public key");
-    fs::write("server.sec", keys.secret.expose()).expect("failed to write secret key");
-    // On Unix, restrict permissions
-    #[cfg(unix)]
-    std::process::Command::new("chmod").arg("600").arg("server.sec").status()?;
-    Ok(())
-}
-
-// --- Client side ---
-use age_crypto::encrypt_armor;
-
-fn send_secure_message(server_pub_key: &str, msg: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let armored = encrypt_armor(msg.as_bytes(), &[server_pub_key])
-        .map_err(|e| format!("Encryption failed: {}", e))?;
-    Ok(armored.to_string())  // safe to send as text
-}
-
-// --- Server: receive and decrypt ---
-use age_crypto::decrypt_armor;
-
-fn receive_message(armored: &str, server_secret: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    let plaintext = decrypt_armor(armored, server_secret)
-        .map_err(|e| format!("Decryption failed: {}", e))?;
-    // Process plaintext ...
-    Ok(plaintext)
-}
-# fn main() {}
-```
-
-### Automated encrypted backup
-
-```rs
-use age_crypto::encrypt_with_passphrase_armor;
-use chrono::Local;
-use std::{fs, path::Path};
-
-# fn main() -> Result<(), Box<dyn std::error::Error>> {
-fn backup_and_encrypt(source_dir: &str, prefix: &str, passphrase: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let mut archive = Vec::new();
-    for entry in fs::read_dir(source_dir)? {
-        let entry = entry?;
-        if entry.path().extension().and_then(|s| s.to_str()) == Some("txt") {
-            let content = fs::read(entry.path())?;
-            archive.extend_from_slice(&content);
-            archive.extend_from_slice(b"\n---\n");
+        if (res == 0 && decrypted) {
+            printf("Decrypted: %.*s\n", (int)dec_len, decrypted);
+            age_free_bytes(decrypted, dec_len);
         }
+
+        age_free_string(armored_out);
+    } else {
+        printf("Encryption failed with code: %d\n", res);
     }
 
-    let timestamp = Local::now().format("%Y%m%d_%H%M%S");
-    let filename = format!("{}_backup_{}.age", prefix, timestamp);
-
-    let armored = encrypt_with_passphrase_armor(&archive, passphrase)
-        .map_err(|e| format!("Encryption failed: {}", e))?;
-    fs::write(&filename, armored.as_str())?;
-    println!("Encrypted backup saved to {}", filename);
-    Ok(())
+    return 0;
 }
-# Ok(())
-# }
 ```
+
+---
+
+## Security Considerations
+
+1.  **Memory Zeroization**: The `Passphrase` type and secret keys managed by `age-setup` are automatically zeroized when they go out of scope, minimizing the risk of secrets remaining in memory.
+2.  **Nonce Management**: The library automatically generates unique nonces for every encryption operation. You do not need to manage them.
+3.  **Passphrase Strength**: For passphrase-based encryption, the security relies entirely on the strength of the passphrase. Use long, high-entropy passphrases (e.g., Diceware).
+4.  **Armored Data**: While armored data is base64 encoded, it is not "encrypted twice". It is simply a text-safe representation of the ciphertext.
 
 ## License
 
 Licensed under either of
 
-- MIT license ([LICENSE‑MIT](LICENSE) or <http://opensource.org/licenses/MIT>)
-
-at your option.
+- MIT license
+  ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 ## Contribution
 
-Contributions are welcome. Please ensure `cargo test` and `cargo clippy` pass
-before submitting a pull request.
+Contributions are welcome! Please ensure `cargo test` passes and run `cargo clippy` to check for linting issues before submitting a pull request.
