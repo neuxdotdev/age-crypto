@@ -19,7 +19,7 @@ fn test_decrypt_with_passphrase_basic_success() {
     for (plaintext, label) in test_cases {
         let ciphertext = valid_ciphertext(plaintext, TEST_PASSPHRASE);
         let decrypted = decrypt_with_passphrase(&ciphertext, TEST_PASSPHRASE)
-            .expect(&format!("Decryption should succeed for: {}", label));
+            .unwrap_or_else(|_| panic!("Decryption should succeed for: {}", label));
         assert_eq!(decrypted, plaintext, "Mismatch for test case: {}", label);
     }
 }

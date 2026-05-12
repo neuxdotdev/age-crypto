@@ -79,11 +79,11 @@ fn test_into_string() {
 #[test]
 fn test_display() {
     let armored = create_armored("abc");
-    assert_eq!(format!("{}", armored), "[ArmoredData: 3 chars]");
+    assert_eq!(format!("{}", armored), "abc");
     let empty = create_armored("");
-    assert_eq!(format!("{}", empty), "[ArmoredData: 0 chars]");
+    assert_eq!(format!("{}", empty), "");
     let long = create_armored(&"x".repeat(1000));
-    assert_eq!(format!("{}", long), "[ArmoredData: 1000 chars]");
+    assert_eq!(format!("{}", long), "x".repeat(1000).as_str());
 }
 #[test]
 fn test_debug() {

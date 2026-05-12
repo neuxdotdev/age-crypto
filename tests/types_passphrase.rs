@@ -46,7 +46,7 @@ fn test_zeroization_on_drop() {
 #[test]
 fn test_unicode_passphrase() {
     let pass = Passphrase::new("你好世界 🦀");
-    assert_eq!(pass.len(), "你好世界 🦀".as_bytes().len());
+    assert_eq!(pass.len(), "你好世界 🦀".len());
     assert_eq!(pass.expose(), "你好世界 🦀");
 }
 #[test]
