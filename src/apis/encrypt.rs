@@ -1,50 +1,8 @@
-//! Key‑based encryption to binary age ciphertexts.
-
 use crate::apis::parse_recipients::parse_recipients;
 use crate::errors::Result;
 use crate::errors::encrypt::EncryptError;
 use crate::types::EncryptedData;
 use std::io::Write;
-
-/// Encrypts plaintext for one or more recipients using age.
-///
-/// # Parameters
-/// - `plaintext`: Data to encrypt.
-/// - `recipients`: Slice of recipient public keys (each starts with `age1...`).
-///
-/// # Returns
-/// `Ok(EncryptedData)` containing the encrypted bytes.
-///
-/// # Errors
-/// | Condition | Error variant |
-/// |-----------|---------------|
-/// | Empty recipient list | [`EncryptError::NoRecipients`] |
-/// | Invalid recipient string | [`EncryptError::InvalidRecipient`] |
-/// | Internal encryption failure | [`EncryptError::Failed`] |
-/// | I/O error during writing | [`EncryptError::Io`] |
-///
-/// # Panics
-/// **No.** All failure paths are handled gracefully.
-///
-/// # Example
-/// ```
-/// use age_crypto::encrypt;
-/// use age_setup::build_keypair;
-///
-/// # fn main() -> age_crypto::errors::Result<()> {
-/// // Create two identities
-/// let alice = build_keypair().expect("key generation failed");
-/// let bob   = build_keypair().expect("key generation failed");
-///
-/// let recipients = [alice.public.expose(), bob.public.expose()];
-///
-/// let data = b"Multi-recipient secret";
-/// let encrypted = encrypt(data, &recipients)?;
-///
-/// assert!(!encrypted.as_bytes().is_empty());
-/// # Ok(())
-/// # }
-/// ```
 pub fn encrypt(plaintext: &[u8], recipients: &[&str]) -> Result<EncryptedData> {
     let recipient_list = parse_recipients(recipients)?;
     let encryptor =
