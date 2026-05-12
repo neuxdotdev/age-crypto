@@ -1,6 +1,7 @@
 use age_crypto::errors::{DecryptError, EncryptError, Error};
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
+use std::io;
 fn bench_error_creation(c: &mut Criterion) {
     c.bench_function("error_encrypt_failed", |b| {
         b.iter(|| EncryptError::Failed(black_box("test error".into())))
@@ -9,9 +10,9 @@ fn bench_error_creation(c: &mut Criterion) {
         b.iter(|| DecryptError::InvalidCiphertext(black_box("bad header".into())))
     });
     c.bench_function("error_wrap_into_top_level", |b| {
-        let e = DecryptError::Io(std::io::Error::new(std::io::ErrorKind::Other, "oops"));
         b.iter(|| {
-            let _: Error = black_box(e.clone()).into();
+            let decrypt_err = DecryptError::Io(io::Error::other("oops"));
+            let _: Error = decrypt_err.into();
         })
     });
 }
