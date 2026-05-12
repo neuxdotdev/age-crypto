@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain (stable)
-        uses: dtolnay/rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@v2
         with:
           toolchain: stable
 
