@@ -48,6 +48,6 @@ impl From<ArmoredData> for String {
 }
 impl fmt::Display for ArmoredData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "[ArmoredData: {} chars]", self.0.len())
+        write!(f, "{}", self.0)
     }
 }
