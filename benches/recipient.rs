@@ -24,7 +24,7 @@ fn bench_multi_recipient(c: &mut Criterion) {
 
         // Benchmark decryption with the first recipient's secret key
         let encrypted = encrypt(&plaintext, &recipients).expect("pre-encrypt");
-        let first_secret = keypairs[0].secret.expose();
+        let first_secret = keypairs[0].secret.expose_secret();
         group.bench_with_input(
             BenchmarkId::new("decrypt", format!("{}_recips", n)),
             &n,

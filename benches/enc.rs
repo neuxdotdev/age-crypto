@@ -1,6 +1,6 @@
 use age_crypto::encrypt;
 use age_setup::build_keypair;
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 
 fn bench_encrypt(c: &mut Criterion) {

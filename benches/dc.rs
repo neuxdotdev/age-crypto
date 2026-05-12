@@ -11,7 +11,7 @@ fn bench_decrypt_key(c: &mut Criterion) {
         let plaintext = vec![0xBB; size];
         let keypair = build_keypair().expect("keygen");
         let encrypted = encrypt(&plaintext, &[keypair.public.expose()]).expect("encrypt");
-        let secret = keypair.secret.expose();
+        let secret = keypair.secret.expose_secret();
 
         group.bench_with_input(
             BenchmarkId::new("size", format!("{}B", size)),

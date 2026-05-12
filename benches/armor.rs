@@ -31,7 +31,7 @@ fn bench_armor_decrypt_key(c: &mut Criterion) {
     let sizes = [16, 1024, 1024 * 1024];
     let keypair = build_keypair().expect("keygen");
     let recipient = keypair.public.expose();
-    let secret = keypair.secret.expose();
+    let secret = keypair.secret.expose_secret();
 
     for &size in &sizes {
         let plaintext = vec![0xDD; size];
