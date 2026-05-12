@@ -43,6 +43,7 @@ fn test_zeroization_on_drop() {
     let pass = Passphrase::new("to be zeroed");
     drop(pass);
 }
+#[warn(clippy::needless_as_bytes)]
 #[test]
 fn test_unicode_passphrase() {
     let pass = Passphrase::new("你好世界 🦀");
