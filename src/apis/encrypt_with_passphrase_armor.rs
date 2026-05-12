@@ -1,18 +1,25 @@
-use crate::apis::encrypt_with_passphrase;
 use crate::errors::Result;
 use crate::errors::encrypt::EncryptError;
 use crate::types::ArmoredData;
 use age::armor::{ArmoredWriter, Format};
+use age::secrecy::SecretString;
 use std::io::Write;
 pub fn encrypt_with_passphrase_armor(plaintext: &[u8], passphrase: &str) -> Result<ArmoredData> {
-    let encrypted = encrypt_with_passphrase(plaintext, passphrase)?;
+    let secret = SecretString::from(passphrase.to_string());
+    let encryptor = age::Encryptor::with_user_passphrase(secret);
     let mut armored = Vec::new();
-    let mut writer = ArmoredWriter::wrap_output(&mut armored, Format::AsciiArmor)
+    let mut armored_writer = ArmoredWriter::wrap_output(&mut armored, Format::AsciiArmor)
+        .map_err(|e| EncryptError::Failed(e.to_string()))?;
+    let mut writer = encryptor
+        .wrap_output(&mut armored_writer)
         .map_err(|e| EncryptError::Failed(e.to_string()))?;
     writer
-        .write_all(encrypted.as_bytes())
+        .write_all(plaintext)
         .map_err(|e| EncryptError::Failed(e.to_string()))?;
     writer
+        .finish()
+        .map_err(|e| EncryptError::Failed(e.to_string()))?;
+    armored_writer
         .finish()
         .map_err(|e| EncryptError::Failed(e.to_string()))?;
     let armored_str = String::from_utf8(armored)
