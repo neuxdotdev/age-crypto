@@ -68,7 +68,7 @@ fn test_decrypt_error_io_debug() {
 }
 #[test]
 fn test_decrypt_error_io_source() {
-    let io_err = io::Error::new(io::ErrorKind::Other, "custom io error");
+    let io_err = io::Error::other("custom io error");
     let err = DecryptError::Io(io_err);
     let source = err.source();
     assert!(source.is_some());
